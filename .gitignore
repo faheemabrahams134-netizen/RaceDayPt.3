@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+*.user
+*.suo
+TestResults/
+.idea/
+.vscode/
+__azurite*
+AzuriteConfig
