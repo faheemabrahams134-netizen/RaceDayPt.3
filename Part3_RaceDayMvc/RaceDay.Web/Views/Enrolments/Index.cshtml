@@ -1,0 +1,61 @@
+@model EnrolmentsPageViewModel
+@{
+    ViewData["Title"] = "Enrolments";
+    var ev = Model.Event;
+    var confirmed = Model.Enrolments.Count(e => e.Status == EnrolmentStatus.Confirmed);
+}
+<div class="container rd-page">
+    <div class="rd-crumb"><a asp-controller="ManageEvents" asp-action="Index"><i class="bi bi-arrow-left"></i> Manage events</a></div>
+    <div class="rd-page-head">
+        <div>
+            <h1>Enrolments</h1>
+            <p>@ev.Name &middot; @Display.Date(ev.EventDate) &middot; @Model.Enrolments.Count enrolled, @confirmed confirmed</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a class="btn btn-outline-ink" asp-controller="Categories" asp-action="Index" asp-route-eventId="@ev.EventId">Categories</a>
+            <a class="btn btn-outline-ink" asp-controller="Results" asp-action="Index" asp-route-eventId="@ev.EventId">Results</a>
+        </div>
+    </div>
+
+    @if (Model.Enrolments.Count == 0)
+    {
+        <div class="rd-card"><div class="rd-empty"><i class="bi bi-people"></i>Nobody has enrolled yet.</div></div>
+    }
+    else
+    {
+        <div class="rd-card">
+            <div class="table-responsive">
+                <table class="table rd-table">
+                    <thead><tr><th>Participant</th><th>Category</th><th>Enrolled on</th><th>Status</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var en in Model.Enrolments)
+                    {
+                        <tr>
+                            <td class="fw-semibold">@en.ParticipantName</td>
+                            <td>@en.CategoryName</td>
+                            <td>@Display.Date(en.EnrolmentDate)</td>
+                            <td><partial name="_StatusBadge" model="en.Status" /></td>
+                            <td class="text-end">
+                                <form asp-action="SetStatus" method="post" class="d-inline">
+                                    <input type="hidden" name="eventId" value="@ev.EventId" />
+                                    <input type="hidden" name="enrolmentId" value="@en.EnrolmentId" />
+                                    @if (en.Status == EnrolmentStatus.Pending)
+                                    {
+                                        <input type="hidden" name="status" value="Confirmed" />
+                                        <button type="submit" class="btn btn-sm btn-primary">Confirm</button>
+                                    }
+                                    else
+                                    {
+                                        <input type="hidden" name="status" value="Pending" />
+                                        <button type="submit" class="btn btn-sm btn-outline-ink">Set to pending</button>
+                                    }
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

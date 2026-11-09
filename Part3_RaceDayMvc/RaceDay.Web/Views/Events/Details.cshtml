@@ -1,0 +1,174 @@
+@model EventDetailsViewModel
+@{
+    var e = Model.Event;
+    ViewData["Title"] = e.Name;
+    var isParticipant = Me.IsParticipant;
+}
+<div class="container rd-page">
+    <div class="rd-crumb">
+        @if (Me.IsOrganiser)
+        {
+            <a asp-controller="ManageEvents" asp-action="Index"><i class="bi bi-arrow-left"></i> Manage events</a>
+        }
+        else
+        {
+            <a asp-controller="Home" asp-action="Index"><i class="bi bi-arrow-left"></i> All events</a>
+        }
+    </div>
+
+    <div class="@Display.TypeClass(e.EventType)">
+        @if (e.BannerVersion is not null)
+        {
+            <img class="rd-detail-banner mb-4" alt="Banner for @e.Name" src="@Url.Action("EventBanner", "Media", new { id = e.EventId, v = e.BannerVersion })" />
+        }
+        <div class="rd-page-head">
+            <div>
+                <span class="rd-type"><i class="bi @Display.TypeIcon(e.EventType)"></i> @e.EventType</span>
+                <h1 class="mt-1">@e.Name</h1>
+                <p><i class="bi bi-calendar-event"></i> @Display.DateTimeLong(e.EventDate) &nbsp;&middot;&nbsp; <i class="bi bi-geo-alt"></i> @e.Location</p>
+            </div>
+            <div class="rd-distance fs-1">@e.DistanceKm.ToString("0.##") <small>km</small></div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="rd-card mb-4"><div class="rd-card-body">
+                <h2 class="rd-card-title">About this event</h2>
+                <p class="mb-0" style="white-space: pre-line">@e.Description</p>
+            </div></div>
+
+            <div class="rd-card"><div class="rd-card-body">
+                <h2 class="rd-card-title">Categories</h2>
+                @if (e.Categories.Count == 0)
+                {
+                    <p class="text-muted mb-0">The organiser hasn't added categories yet.</p>
+                }
+                else
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var c in e.Categories)
+                        {
+                            <li class="d-flex justify-content-between align-items-start py-2 border-bottom">
+                                <div>
+                                    <strong>@c.Name</strong>
+                                    @if (!string.IsNullOrWhiteSpace(c.Description))
+                                    {
+                                        <div class="text-muted small">@c.Description</div>
+                                    }
+                                </div>
+                                <span class="rd-numeral fs-6">@Display.CategoryRule(c)</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div></div>
+        </div>
+
+        <div class="col-lg-5">
+            @if (isParticipant)
+            {
+                <div class="rd-card"><div class="rd-card-body">
+                    <h2 class="rd-card-title">Your entry</h2>
+                    @if (Model.MyEnrolment is { } mine)
+                    {
+                        <p class="mb-2">You're enrolled in <strong>@mine.CategoryName</strong>.</p>
+                        <p><partial name="_StatusBadge" model="mine.Status" /></p>
+                        @if (!Model.IsPast)
+                        {
+                            <form asp-controller="Participant" asp-action="Withdraw" asp-route-id="@mine.EnrolmentId" method="post">
+                                <button type="submit" class="btn btn-outline-ink" data-confirm="Withdraw from @e.Name?">Withdraw</button>
+                            </form>
+                        }
+                    }
+                    else if (Model.IsPast)
+                    {
+                        <p class="text-muted mb-0">This event has already taken place, so enrolment is closed.</p>
+                    }
+                    else if (e.Categories.Count == 0)
+                    {
+                        <p class="text-muted mb-0">Enrolment opens once the organiser adds categories.</p>
+                    }
+                    else
+                    {
+                        <form asp-controller="Events" asp-action="Enrol" method="post">
+                            <input type="hidden" name="eventId" value="@e.EventId" />
+                            <fieldset>
+                                <legend class="form-label fs-6">Choose your category</legend>
+                                <div class="d-grid gap-2">
+                                    @foreach (var c in e.Categories)
+                                    {
+                                        var eligible = true;
+                                        if (c.CategoryType == CategoryType.Age && Model.MyAge is { } age)
+                                        {
+                                            eligible = (c.MinAge is null || age >= c.MinAge) && (c.MaxAge is null || age <= c.MaxAge);
+                                        }
+                                        <label class="rd-radio-card @(eligible ? "" : "disabled")">
+                                            <input type="radio" class="form-check-input me-2" name="categoryId" value="@c.CategoryId" disabled="@(!eligible)" />
+                                            <strong>@c.Name</strong> <span class="text-muted">@Display.CategoryRule(c)</span>
+                                            @if (!eligible)
+                                            {
+                                                <span class="d-block small text-muted">Not available for your age on event day</span>
+                                            }
+                                        </label>
+                                    }
+                                </div>
+                            </fieldset>
+                            @if (!Model.HasDateOfBirth && e.Categories.Any(c => c.CategoryType == CategoryType.Age))
+                            {
+                                <p class="small text-muted mt-2 mb-0">Age categories need your date of birth. <a asp-controller="Account" asp-action="Profile">Add it to your profile</a>.</p>
+                            }
+                            <button type="submit" class="btn btn-primary w-100 mt-3">Enrol now</button>
+                        </form>
+                    }
+                </div></div>
+            }
+            else
+            {
+                <div class="rd-card"><div class="rd-card-body">
+                    <h2 class="rd-card-title">Manage this event</h2>
+                    <p><span class="rd-numeral">@e.EnrolmentCount</span> enrolled</p>
+                    @if (e.OrganiserId == Me.UserId)
+                    {
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-primary" asp-controller="Enrolments" asp-action="Index" asp-route-eventId="@e.EventId">View enrolments</a>
+                            <a class="btn btn-outline-ink" asp-controller="Categories" asp-action="Index" asp-route-eventId="@e.EventId">Categories</a>
+                            <a class="btn btn-outline-ink" asp-controller="Results" asp-action="Index" asp-route-eventId="@e.EventId">Results</a>
+                            <a class="btn btn-outline-ink" asp-controller="ManageEvents" asp-action="Edit" asp-route-id="@e.EventId">Edit event</a>
+                        </div>
+                    }
+                </div></div>
+            }
+        </div>
+    </div>
+
+    @if (Model.IsPast)
+    {
+        <div class="rd-card mt-4"><div class="rd-card-body">
+            <h2 class="rd-card-title">Results</h2>
+            @if (Model.Results.Count == 0)
+            {
+                <p class="text-muted mb-0">Results haven't been published yet.</p>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table rd-table">
+                        <thead><tr><th>Category</th><th>Pos.</th><th>Name</th><th>Time</th></tr></thead>
+                        <tbody>
+                        @foreach (var r in Model.Results)
+                        {
+                            <tr>
+                                <td>@r.CategoryName</td>
+                                <td><span class="rd-numeral">@r.FinishPosition</span></td>
+                                <td>@r.ParticipantName</td>
+                                <td class="rd-numeral">@Display.Time(r.FinishTime)</td>
+                            </tr>
+                        }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div></div>
+    }
+</div>

@@ -1,0 +1,52 @@
+@model List<ResultDto>
+@{
+    ViewData["Title"] = "My results";
+}
+<div class="container rd-page">
+    <div class="rd-page-head">
+        <div>
+            <h1>My results</h1>
+            <p>Your race history across every completed event.</p>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="rd-card"><div class="rd-empty">
+            <i class="bi bi-stopwatch"></i>
+            <p class="mb-1"><strong>No results yet.</strong></p>
+            <p class="mb-0">Results appear here once an organiser publishes them after your event.</p>
+        </div></div>
+    }
+    else
+    {
+        <div class="rd-card">
+            <div class="table-responsive">
+                <table class="table rd-table">
+                    <thead>
+                        <tr><th>Event</th><th>Date</th><th>Category</th><th>Finish time</th><th>Finishing position</th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var r in Model)
+                    {
+                        <tr>
+                            <td><a class="fw-semibold text-decoration-none" asp-controller="Events" asp-action="Details" asp-route-id="@r.EventId">@r.EventName</a></td>
+                            <td>@Display.Date(r.EventDate)</td>
+                            <td>@r.CategoryName</td>
+                            <td class="rd-numeral">@Display.Time(r.FinishTime)</td>
+                            <td>
+                                <span class="rd-position @(r.FinishPosition == 1 ? "rd-podium-1" : "")">@Display.Ordinal(r.FinishPosition)
+                                    @if (r.TotalFinishers > 0)
+                                    {
+                                        <small>out of @r.TotalFinishers @(r.TotalFinishers == 1 ? "finisher" : "finishers") in @r.CategoryName</small>
+                                    }
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,74 @@
+@model ResultsPageViewModel
+@{
+    ViewData["Title"] = "Results";
+    var ev = Model.Event;
+}
+<div class="container rd-page">
+    <div class="rd-crumb"><a asp-controller="ManageEvents" asp-action="Index"><i class="bi bi-arrow-left"></i> Manage events</a></div>
+    <div class="rd-page-head">
+        <div>
+            <h1>Results</h1>
+            <p>@ev.Name &middot; @Display.Date(ev.EventDate)</p>
+        </div>
+    </div>
+
+    @if (!Model.EventHasHappened)
+    {
+        <div class="rd-alert rd-alert-info mb-3"><i class="bi bi-info-circle-fill me-1"></i> Results can be captured once the event has taken place (@Display.DateTimeLong(ev.EventDate)).</div>
+    }
+    else
+    {
+        <p class="text-muted">Enter each finisher's time as <strong>h:mm:ss</strong> and their position within their category. Saving a row publishes it to the participant straight away.</p>
+    }
+
+    @if (Model.Rows.Count == 0)
+    {
+        <div class="rd-card"><div class="rd-empty"><i class="bi bi-people"></i>Nobody is enrolled in this event.</div></div>
+    }
+    else
+    {
+        <div class="rd-card">
+            <div class="table-responsive">
+                <table class="table rd-table">
+                    <thead><tr><th>Participant</th><th>Category</th><th>Status</th><th>Finish time</th><th>Position</th><th></th></tr></thead>
+                    <tbody>
+                    @foreach (var row in Model.Rows)
+                    {
+                        var en = row.Enrolment;
+                        var formId = "result-" + en.EnrolmentId;
+                        <tr>
+                            <td class="fw-semibold">@en.ParticipantName</td>
+                            <td>@en.CategoryName</td>
+                            <td><partial name="_StatusBadge" model="en.Status" /></td>
+                            @if (Model.EventHasHappened)
+                            {
+                                <td>
+                                    <input form="@formId" name="finishTime" class="form-control rd-time-input" placeholder="0:45:12" inputmode="numeric"
+                                           pattern="\d{1,2}:\d{2}:\d{2}" aria-label="Finish time for @en.ParticipantName"
+                                           value="@(row.Result is null ? "" : Display.Time(row.Result.FinishTime))" required />
+                                </td>
+                                <td>
+                                    <input form="@formId" name="finishPosition" type="number" min="1" class="form-control rd-pos-input"
+                                           aria-label="Finishing position for @en.ParticipantName" value="@(row.Result?.FinishPosition)" required />
+                                </td>
+                                <td class="text-end">
+                                    <form id="@formId" asp-action="Save" method="post">
+                                        <input type="hidden" name="eventId" value="@ev.EventId" />
+                                        <input type="hidden" name="enrolmentId" value="@en.EnrolmentId" />
+                                        <input type="hidden" name="resultId" value="@(row.Result?.ResultId)" />
+                                        <button type="submit" class="btn btn-sm @(row.Result is null ? "btn-primary" : "btn-outline-ink")">@(row.Result is null ? "Publish" : "Update")</button>
+                                    </form>
+                                </td>
+                            }
+                            else
+                            {
+                                <td colspan="3" class="text-muted">Available after the event</td>
+                            }
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

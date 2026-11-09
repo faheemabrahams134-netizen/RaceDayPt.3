@@ -1,0 +1,61 @@
+@model List<EventDto>
+@{
+    ViewData["Title"] = "Manage events";
+}
+<div class="container rd-page">
+    <div class="rd-page-head">
+        <div>
+            <h1>Manage events</h1>
+            <p>Create events, add categories, confirm enrolments and publish results.</p>
+        </div>
+        <a class="btn btn-primary" asp-action="Create"><i class="bi bi-plus-lg"></i> New event</a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="rd-card"><div class="rd-empty"><i class="bi bi-flag"></i><p class="mb-1"><strong>No events yet.</strong></p><a asp-action="Create">Create your first event</a></div></div>
+    }
+    else
+    {
+        <div class="rd-card">
+            <div class="table-responsive">
+                <table class="table rd-table">
+                    <thead><tr><th></th><th>Event</th><th>Date</th><th>Distance</th><th class="text-end">Enrolled</th><th>Manage</th></tr></thead>
+                    <tbody>
+                    @foreach (var e in Model)
+                    {
+                        <tr class="@Display.TypeClass(e.EventType)">
+                            <td style="width:90px">
+                                @if (e.BannerVersion is not null)
+                                {
+                                    <img class="rd-thumb" alt="" loading="lazy" src="@Url.Action("EventBanner", "Media", new { id = e.EventId, v = e.BannerVersion })" />
+                                }
+                                else
+                                {
+                                    <span class="rd-thumb rd-thumb-empty" aria-hidden="true"><i class="bi @Display.TypeIcon(e.EventType)"></i></span>
+                                }
+                            </td>
+                            <td>
+                                <a class="fw-semibold text-decoration-none" asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.Name</a>
+                                <div class="text-muted small"><span class="rd-type"><i class="bi @Display.TypeIcon(e.EventType)"></i> @e.EventType</span> &middot; @e.Location</div>
+                            </td>
+                            <td>@Display.Date(e.EventDate)</td>
+                            <td>@Display.Km(e.DistanceKm)</td>
+                            <td class="text-end rd-numeral">@e.EnrolmentCount</td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    <a class="btn btn-sm btn-outline-ink" asp-action="Edit" asp-route-id="@e.EventId">Edit</a>
+                                    <a class="btn btn-sm btn-outline-ink" asp-controller="Categories" asp-action="Index" asp-route-eventId="@e.EventId">Categories</a>
+                                    <a class="btn btn-sm btn-outline-ink" asp-controller="Enrolments" asp-action="Index" asp-route-eventId="@e.EventId">Enrolments</a>
+                                    <a class="btn btn-sm btn-outline-ink" asp-controller="Results" asp-action="Index" asp-route-eventId="@e.EventId">Results</a>
+                                    <a class="btn btn-sm btn-outline-primary" asp-action="Delete" asp-route-id="@e.EventId">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

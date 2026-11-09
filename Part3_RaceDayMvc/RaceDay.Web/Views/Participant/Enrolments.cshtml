@@ -1,0 +1,62 @@
+@model List<EnrolmentDto>
+@{
+    ViewData["Title"] = "My enrolments";
+}
+<div class="container rd-page">
+    <div class="rd-page-head">
+        <div>
+            <h1>My enrolments</h1>
+            <p>Every event you've entered and where each entry stands.</p>
+        </div>
+        <a class="btn btn-primary" asp-controller="Home" asp-action="Index">Find events</a>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="rd-card"><div class="rd-empty">
+            <i class="bi bi-ticket-perforated"></i>
+            <p class="mb-1"><strong>You haven't enrolled in anything yet.</strong></p>
+            <a asp-controller="Home" asp-action="Index">Browse upcoming events</a>
+        </div></div>
+    }
+    else
+    {
+        <div class="rd-card">
+            <div class="table-responsive">
+                <table class="table rd-table">
+                    <thead>
+                        <tr><th>Event</th><th>Date</th><th>Category</th><th>Status</th><th>Enrolled on</th><th><span class="visually-hidden">Actions</span></th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var en in Model)
+                    {
+                        var past = en.EventDate <= DateTime.UtcNow;
+                        <tr>
+                            <td>
+                                <a class="fw-semibold text-decoration-none" asp-controller="Events" asp-action="Details" asp-route-id="@en.EventId">@en.EventName</a>
+                                <div class="text-muted small"><i class="bi bi-geo-alt"></i> @en.EventLocation</div>
+                            </td>
+                            <td>@Display.Date(en.EventDate)</td>
+                            <td>@en.CategoryName</td>
+                            <td><partial name="_StatusBadge" model="en.Status" /></td>
+                            <td>@Display.Date(en.EnrolmentDate)</td>
+                            <td class="text-end">
+                                @if (past)
+                                {
+                                    <a class="btn btn-sm btn-outline-ink" asp-action="Results">See results</a>
+                                }
+                                else
+                                {
+                                    <form asp-action="Withdraw" asp-route-id="@en.EnrolmentId" method="post" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-ink" data-confirm="Withdraw from @en.EventName?">Withdraw</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>

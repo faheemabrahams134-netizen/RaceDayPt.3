@@ -1,0 +1,18 @@
+@model EventDetailDto
+@{
+    ViewData["Title"] = "Delete event";
+}
+<div class="container rd-page">
+    <div class="rd-card mx-auto" style="max-width:600px"><div class="rd-card-body">
+        <h1 class="h2">Delete "@Model.Name"?</h1>
+        <p>This removes the event, its categories and its banner image. It cannot be undone.</p>
+        @if (Model.EnrolmentCount > 0)
+        {
+            <div class="rd-alert rd-alert-warning mb-3">@Model.EnrolmentCount @(Model.EnrolmentCount == 1 ? "participant has" : "participants have") enrolled, so this event can't be deleted.</div>
+        }
+        <form asp-action="Delete" asp-route-id="@Model.EventId" method="post" class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary" disabled="@(Model.EnrolmentCount > 0)">Yes, delete</button>
+            <a class="btn btn-outline-ink" asp-action="Index">Cancel</a>
+        </form>
+    </div></div>
+</div>

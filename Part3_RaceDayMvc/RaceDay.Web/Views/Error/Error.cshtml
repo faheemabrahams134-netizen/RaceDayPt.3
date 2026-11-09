@@ -1,0 +1,14 @@
+@model ErrorViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<div class="container rd-page">
+    <div class="rd-card mx-auto text-center" style="max-width: 560px;">
+        <div class="rd-card-body py-5">
+            <p class="rd-display mb-1" style="font-size:4.5rem;color:var(--rd-primary)">@(Model.Status == 0 ? "!" : Model.Status.ToString())</p>
+            <h1 class="h2">@Model.Title</h1>
+            <p class="text-muted">@Model.Message</p>
+            <a class="btn btn-primary mt-2" asp-controller="Home" asp-action="Index">Back to home</a>
+        </div>
+    </div>
+</div>

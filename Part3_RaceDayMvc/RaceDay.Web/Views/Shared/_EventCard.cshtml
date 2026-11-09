@@ -1,0 +1,29 @@
+@model (EventDto Event, bool Enrolled)
+@{
+    var e = Model.Event;
+}
+<article class="rd-event @Display.TypeClass(e.EventType)">
+    @if (e.BannerVersion is not null)
+    {
+        <img class="rd-banner" loading="lazy" alt="" src="@Url.Action("EventBanner", "Media", new { id = e.EventId, v = e.BannerVersion })" />
+    }
+    else
+    {
+        <div class="rd-banner rd-banner-empty" aria-hidden="true"><i class="bi @Display.TypeIcon(e.EventType)"></i></div>
+    }
+    <div class="rd-event-body">
+        <span class="rd-type"><i class="bi @Display.TypeIcon(e.EventType)"></i> @e.EventType</span>
+        <h3><a asp-controller="Events" asp-action="Details" asp-route-id="@e.EventId">@e.Name</a></h3>
+        <div class="rd-meta">
+            <span><i class="bi bi-calendar-event"></i>@Display.DateTimeLong(e.EventDate)</span>
+            <span><i class="bi bi-geo-alt"></i>@e.Location</span>
+        </div>
+        <div class="rd-event-foot">
+            <span class="rd-distance">@e.DistanceKm.ToString("0.##") <small>km</small></span>
+            @if (Model.Enrolled)
+            {
+                <span class="rd-status rd-status-confirmed"><i class="bi bi-check2"></i> You're enrolled</span>
+            }
+        </div>
+    </div>
+</article>

@@ -1,0 +1,9 @@
+@model EnrolmentStatus
+@if (Model == EnrolmentStatus.Confirmed)
+{
+    <span class="rd-status rd-status-confirmed"><i class="bi bi-check-circle-fill"></i> Confirmed</span>
+}
+else
+{
+    <span class="rd-status rd-status-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
+}

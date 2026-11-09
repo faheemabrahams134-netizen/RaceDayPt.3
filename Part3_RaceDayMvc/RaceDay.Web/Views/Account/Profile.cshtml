@@ -1,0 +1,71 @@
+@model ProfileViewModel
+@{
+    ViewData["Title"] = "My profile";
+}
+<div class="container rd-page">
+    <div class="rd-page-head">
+        <div>
+            <h1>My profile</h1>
+            <p>@Model.Email &middot; @Model.Role</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="rd-card"><div class="rd-card-body text-center">
+                @if (Model.PictureVersion is not null)
+                {
+                    <img class="rd-avatar rd-avatar-lg mb-3" alt="Your profile picture" src="@Url.Action("ProfilePicture", "Media", new { v = Model.PictureVersion })" />
+                }
+                else
+                {
+                    <span class="rd-avatar rd-avatar-lg mb-3" aria-hidden="true">@Display.Initials(Model.FullName)</span>
+                }
+                <h2 class="h4">Profile picture</h2>
+                <form asp-action="UploadPicture" method="post" enctype="multipart/form-data" class="text-start">
+                    <label for="picture" class="form-label">Choose an image</label>
+                    <input id="picture" name="picture" type="file" class="form-control" accept="image/png,image/jpeg,image/gif,image/webp" data-preview="picture-preview" required />
+                    <div class="form-text">JPG, PNG, GIF or WebP, up to 5 MB.</div>
+                    <div id="picture-preview-warn" class="text-danger small" role="alert"></div>
+                    <button type="submit" class="btn btn-primary w-100 mt-3">Upload picture</button>
+                </form>
+            </div></div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="rd-card"><div class="rd-card-body">
+                <h2 class="rd-card-title">Personal information</h2>
+                <form asp-action="Profile" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="rd-alert rd-alert-error mb-3"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="FullName" class="form-label"></label>
+                            <input asp-for="FullName" class="form-control" />
+                            <span asp-validation-for="FullName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="email-readonly">Email</label>
+                            <input id="email-readonly" class="form-control" value="@Model.Email" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="form-label"></label>
+                            <input asp-for="Phone" class="form-control" />
+                            <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="DateOfBirth" class="form-label"></label>
+                            <input asp-for="DateOfBirth" type="date" class="form-control" value="@(Model.DateOfBirth?.ToString("yyyy-MM-dd"))" />
+                            @if (Model.Role == "Participant")
+                            {
+                                <div class="form-text">Used to check age categories on event day.</div>
+                            }
+                            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-4">Save changes</button>
+                </form>
+            </div></div>
+        </div>
+    </div>
+</div>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

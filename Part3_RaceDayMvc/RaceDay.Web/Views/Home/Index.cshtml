@@ -1,0 +1,68 @@
+@model HomeViewModel
+@{
+    ViewData["Title"] = "Upcoming events";
+    var f = Model.Filter;
+    var fromValue = (f.From ?? DateTime.UtcNow.Date).ToString("yyyy-MM-dd");
+}
+<div class="container rd-page">
+    <div class="rd-page-head">
+        <div>
+            <h1>Upcoming events</h1>
+            <p>Pick your next start line, @Me.FullName.</p>
+        </div>
+    </div>
+
+    <form method="get" asp-action="Index" asp-controller="Home" class="rd-card mb-4" aria-label="Filter events">
+        <div class="rd-card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="q" class="form-label">Search</label>
+                    <input id="q" name="Q" class="form-control" placeholder="Event name or location" value="@f.Q" />
+                </div>
+                <div class="col-sm-6 col-md-2">
+                    <label for="type" class="form-label">Type</label>
+                    <select id="type" name="Type" class="form-select">
+                        <option value="">All types</option>
+                        @foreach (var t in Enum.GetValues<EventType>())
+                        {
+                            <option value="@t" selected="@(f.Type == t)">@t</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md-2">
+                    <label for="from" class="form-label">From</label>
+                    <input id="from" name="From" type="date" class="form-control" value="@fromValue" />
+                </div>
+                <div class="col-sm-6 col-md-2">
+                    <label for="to" class="form-label">To</label>
+                    <input id="to" name="To" type="date" class="form-control" value="@(f.To?.ToString("yyyy-MM-dd"))" />
+                </div>
+                <div class="col-sm-6 col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">Filter</button>
+                    <a class="btn btn-outline-ink" asp-action="Index" title="Clear filters">Reset</a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    @if (Model.Events.Count == 0)
+    {
+        <div class="rd-card"><div class="rd-empty">
+            <i class="bi bi-calendar-x"></i>
+            <p class="mb-1"><strong>No events match your filters.</strong></p>
+            <p class="mb-0">Try a different type or widen the dates.</p>
+        </div></div>
+    }
+    else
+    {
+        <p class="text-muted">@Model.Events.Count @(Model.Events.Count == 1 ? "event" : "events") found</p>
+        <div class="row g-4">
+            @foreach (var e in Model.Events)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <partial name="_EventCard" model="(e, Model.EnrolledEventIds.Contains(e.EventId))" />
+                </div>
+            }
+        </div>
+    }
+</div>
