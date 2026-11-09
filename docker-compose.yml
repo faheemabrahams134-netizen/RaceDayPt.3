@@ -1,0 +1,59 @@
+# Starts the whole RaceDay platform with ONE command:
+#     docker compose up --build
+# then open http://localhost:8081
+#
+#   web     -> Part 3 MVC app (this POE)             http://localhost:8081
+#   api     -> Part 2 RESTful API + Swagger          http://localhost:8080/swagger
+#   sql     -> SQL Server 2022
+#   azurite -> Azure Blob Storage emulator (so no Azure account is needed to try it)
+
+services:
+  web:
+    build: ./Part3_RaceDayMvc
+    ports:
+      - "8081:8080"
+    environment:
+      Api__BaseUrl: http://api:8080/
+    depends_on:
+      - api
+
+  api:
+    build: ./Part2_RaceDayApi
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: "Server=sql;Database=RaceDayDb;User Id=sa;Password=RaceDay_Passw0rd!;TrustServerCertificate=True"
+      # Azurite's well-known development account. For real Azure, put your storage account connection string here.
+      AzureBlob__ConnectionString: "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;"
+      Registration__OrganiserCode: RACEDAY-ORG-2026
+      Seed__DemoData: "true"
+    depends_on:
+      sql:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+
+  sql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: RaceDay_Passw0rd!
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    command: azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck --loose
+    volumes:
+      - blobdata:/data
+
+volumes:
+  sqldata:
+  blobdata:
